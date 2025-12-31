@@ -1,0 +1,80 @@
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CalCraft</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Lora:ital,wght@0,400;0,700;1,400&family=Space+Mono&family=Playfair+Display:wght@700&family=Montserrat:wght@300;400;700&display=swap" rel="stylesheet">
+    <style>
+      @media print {
+        .no-print {
+          display: none !important;
+        }
+        @page {
+          margin: 0;
+          size: auto;
+        }
+        body {
+          margin: 0;
+          padding: 0;
+          background: white !important;
+        }
+      }
+      
+      .html2pdf__page-break {
+        page-break-after: always !important;
+        break-after: page !important;
+        display: block;
+      }
+
+      body {
+        font-family: 'Inter', sans-serif;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+      }
+      .font-serif-elegant { font-family: 'Playfair Display', serif; }
+      .font-serif-classic { font-family: 'Lora', serif; }
+      .font-sans-modern { font-family: 'Montserrat', sans-serif; }
+      .font-mono-tech { font-family: 'Space Mono', monospace; }
+
+      .calendar-page-shadow {
+        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+      }
+      
+      @media print {
+        .calendar-page-shadow {
+          box-shadow: none !important;
+        }
+      }
+
+      .pdf-page-container {
+        position: relative;
+        background: white;
+        box-sizing: border-box;
+        overflow: hidden;
+      }
+    </style>
+  <script type="importmap">
+{
+  "imports": {
+    "react/": "https://esm.sh/react@^19.2.3/",
+    "react": "https://esm.sh/react@^19.2.3",
+    "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
+    "@vitejs/plugin-react": "https://esm.sh/@vitejs/plugin-react@^5.1.2",
+    "vite": "https://esm.sh/vite@^7.3.0"
+  }
+}
+</script>
+<link rel="stylesheet" href="/index.css">
+</head>
+  <body class="bg-slate-50 text-slate-900">
+    <div id="root"></div>
+    <!-- Vite will automatically handle this entry point during build -->
+    <script type="module" src="/index.tsx"></script>
+  </body>
+</html>
