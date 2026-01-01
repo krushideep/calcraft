@@ -3,6 +3,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { CalendarEvent, AppConfig, MonthConfig, CalendarFont, PageSize, LayoutBlock, Alignment, CalendarSource } from './types';
 import { parseICS } from './utils/calendarUtils';
 import MonthPage from './components/MonthPage';
+import HelpModal from './components/HelpModal';
 
 declare var html2canvas: any;
 declare var html2pdf: any;
@@ -67,6 +68,7 @@ const App: React.FC = () => {
   const [exportLoading, setExportLoading] = useState(false);
   const [exportType, setExportType] = useState<'PDF' | 'PNG' | null>(null);
   const [exportProgress, setExportProgress] = useState(0);
+  const [showHelp, setShowHelp] = useState(false);
   const calendarRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -524,7 +526,7 @@ const App: React.FC = () => {
         </div>
 
         <div className="p-6 bg-white border-t mt-auto shadow-xl space-y-3">
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-3 gap-3">
             <button 
               onClick={handleExportPDF} 
               disabled={exportLoading} 
@@ -553,6 +555,13 @@ const App: React.FC = () => {
                 </>
               )}
             </button>
+            <button
+              onClick={() => setShowHelp(true)}
+              className="flex flex-col items-center justify-center gap-1 bg-indigo-50 text-indigo-800 py-3 rounded-2xl font-black uppercase tracking-[0.1em] text-[10px] hover:bg-indigo-100 transition-all shadow-sm border border-indigo-200"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 mb-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 18h.01M16 10h.01M12 2v2m0 16v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2m16 0h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" /></svg>
+              Help
+            </button>
           </div>
           
           {exportLoading && exportType === 'PNG' && (
@@ -576,8 +585,15 @@ const App: React.FC = () => {
           ))}
         </div>
       </main>
+      {/* Help modal */}
+      <HelpModal open={showHelp} onClose={() => setShowHelp(false)} />
     </div>
   );
 };
 
 export default App;
+
+// Help modal
+function HelpModalWrapper({ open, onClose }: { open: boolean; onClose: () => void }) {
+  return <HelpModal open={open} onClose={onClose} />;
+}
