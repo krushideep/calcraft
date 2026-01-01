@@ -189,6 +189,12 @@ const App: React.FC = () => {
       posthog.capture('pdf_export_completed', {
         year: config.year
       });
+      // Track the actual PDF download as an individual download event
+      posthog.capture('calendar_downloaded', {
+        filename: opt.filename,
+        year: config.year,
+        export_type: 'PDF'
+      });
     } catch (error) {
       console.error("PDF Export failed", error);
       alert("PDF export failed.");
@@ -234,6 +240,13 @@ const App: React.FC = () => {
         link.download = `CalCraft-${config.year}-${monthName}.png`;
         link.href = dataUrl;
         link.click();
+        // Track each image file download individually
+        posthog.capture('calendar_downloaded', {
+          filename: `CalCraft-${config.year}-${monthName}.png`,
+          month: i,
+          year: config.year,
+          export_type: 'PNG'
+        });
 
         await new Promise(resolve => setTimeout(resolve, 600));
       }
