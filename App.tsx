@@ -1,5 +1,6 @@
 
 import React, { useState, useEffect, useRef } from 'react';
+import posthog from 'posthog-js';
 import { CalendarEvent, AppConfig, MonthConfig, CalendarFont, PageSize, LayoutBlock, Alignment, CalendarSource } from './types';
 import { parseICS } from './utils/calendarUtils';
 import MonthPage from './components/MonthPage';
@@ -103,17 +104,33 @@ const App: React.FC = () => {
       };
 
       setCalendars(prev => [...prev, newCalendar]);
+      posthog.capture('calendar_imported', {
+        calendar_name: file.name,
+        event_count: parsed.length
+      });
     };
     reader.readAsText(file);
     e.target.value = '';
   };
 
   const toggleCalendar = (id: string) => {
-    setCalendars(prev => prev.map(cal => cal.id === id ? { ...cal, active: !cal.active } : cal));
+    setCalendars(prev => {
+      const updated = prev.map(cal => cal.id === id ? { ...cal, active: !cal.active } : cal);
+      const calendar = updated.find(c => c.id === id);
+      posthog.capture('calendar_toggled', {
+        calendar_name: calendar?.name,
+        now_active: calendar?.active
+      });
+      return updated;
+    });
   };
 
   const deleteCalendar = (id: string) => {
+    const calendar = calendars.find(c => c.id === id);
     setCalendars(prev => prev.filter(cal => cal.id !== id));
+    posthog.capture('calendar_deleted', {
+      calendar_name: calendar?.name
+    });
   };
 
   const handleImageUpload = (monthIndex: number, e: React.ChangeEvent<HTMLInputElement>) => {
@@ -125,6 +142,10 @@ const App: React.FC = () => {
       const newConfigs = [...monthConfigs];
       newConfigs[monthIndex].image = base64;
       setMonthConfigs(newConfigs);
+      posthog.capture('month_image_updated', {
+        month: monthIndex,
+        file_size: file.size
+      });
     };
     reader.readAsDataURL(file);
   };
@@ -133,12 +154,20 @@ const App: React.FC = () => {
     const newConfigs = [...monthConfigs];
     newConfigs[monthIndex].quote = text;
     setMonthConfigs(newConfigs);
+    posthog.capture('month_quote_updated', {
+      month: monthIndex,
+      quote_length: text.length
+    });
   };
 
   const handleExportPDF = async () => {
     if (!calendarRef.current) return;
     setExportLoading(true);
     setExportType('PDF');
+    posthog.capture('pdf_export_started', {
+      year: config.year,
+      page_size: config.pageSize
+    });
     
     const originalGap = calendarRef.current.className;
     calendarRef.current.className = "mx-auto flex flex-col items-center gap-0";
@@ -157,9 +186,16 @@ const App: React.FC = () => {
 
     try {
       await html2pdf().set(opt).from(calendarRef.current).save();
+      posthog.capture('pdf_export_completed', {
+        year: config.year
+      });
     } catch (error) {
       console.error("PDF Export failed", error);
       alert("PDF export failed.");
+      posthog.capture('pdf_export_failed', {
+        year: config.year,
+        error: String(error)
+      });
     } finally {
       calendarRef.current.className = originalGap;
       setExportLoading(false);
@@ -172,6 +208,9 @@ const App: React.FC = () => {
     setExportLoading(true);
     setExportType('PNG');
     setExportProgress(0);
+    posthog.capture('image_export_started', {
+      year: config.year
+    });
 
     const monthElements = calendarRef.current.querySelectorAll('.pdf-page-container');
     
@@ -198,9 +237,17 @@ const App: React.FC = () => {
 
         await new Promise(resolve => setTimeout(resolve, 600));
       }
+      posthog.capture('image_export_completed', {
+        year: config.year,
+        months_exported: monthElements.length
+      });
     } catch (error) {
       console.error("Image Export failed", error);
       alert("Image export failed.");
+      posthog.capture('image_export_failed', {
+        year: config.year,
+        error: String(error)
+      });
     } finally {
       setExportLoading(false);
       setExportProgress(0);
@@ -210,6 +257,10 @@ const App: React.FC = () => {
 
   const updateConfig = <K extends keyof AppConfig>(key: K, value: AppConfig[K]) => {
     setConfig(prev => ({ ...prev, [key]: value }));
+    posthog.capture('config_updated', {
+      setting: key,
+      value: typeof value === 'object' ? JSON.stringify(value) : value
+    });
   };
 
   const moveBlock = (index: number, direction: 'up' | 'down') => {
@@ -556,7 +607,10 @@ const App: React.FC = () => {
               )}
             </button>
             <button
-              onClick={() => setShowHelp(true)}
+              onClick={() => {
+                setShowHelp(true);
+                posthog.capture('help_opened');
+              }}
               className="flex flex-col items-center justify-center gap-1 bg-indigo-50 text-indigo-800 py-3 rounded-2xl font-black uppercase tracking-[0.1em] text-[10px] hover:bg-indigo-100 transition-all shadow-sm border border-indigo-200"
             >
               <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 mb-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 18h.01M16 10h.01M12 2v2m0 16v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2m16 0h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" /></svg>
