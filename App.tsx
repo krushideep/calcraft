@@ -100,14 +100,25 @@ const App: React.FC = () => {
     if (!file) return;
 
     const reader = new FileReader();
-    reader.onload = (event) => {
+    reader.onload = async (event) => {
       const content = event.target?.result as string;
       const parsed = parseICS(content);
-      
+      // Expand recurring events into instances for the currently selected year
+      // so yearly birthdays and other recurring items appear in the calendar.
+      // This keeps the calendar events scoped to the displayed year.
+      const expanded = await (async () => {
+        try {
+          const mod = await import('./utils/calendarUtils');
+          return mod.expandRecurringForYear(parsed, config.year);
+        } catch (e) {
+          return parsed;
+        }
+      })();
+
       const newCalendar: CalendarSource = {
         id: crypto.randomUUID(),
         name: file.name.replace('.ics', ''),
-        events: parsed,
+        events: expanded,
         active: true,
         color: config.primaryColor
       };
