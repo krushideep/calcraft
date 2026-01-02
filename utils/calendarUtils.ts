@@ -47,6 +47,10 @@ export const parseICS = (data: string): CalendarEvent[] => {
           // store raw RRULE for later expansion
           (currentEvent as any).rrule = value;
           break;
+        case 'RECURRENCE-ID':
+          // Mark this as a recurrence override for a specific date
+          (currentEvent as any).recurrenceId = parseICSDate(value);
+          break;
         case 'DTSTART':
           currentEvent.startDate = parseICSDate(value);
           break;
@@ -68,7 +72,29 @@ export const expandRecurringForYear = (events: CalendarEvent[], targetYear: numb
 
   for (const ev of events) {
     const anyEv = ev as any;
+    
+    // Skip RECURRENCE-ID events (they are overrides for specific instances and should only be included if explicitly matched)
+    if (anyEv.recurrenceId) {
+      // Only include RECURRENCE-ID events that match the target year
+      const recDate = anyEv.recurrenceId as Date;
+      if (recDate.getUTCFullYear() === targetYear) {
+        expanded.push(ev);
+      }
+      continue;
+    }
+    
     if (anyEv.rrule && /FREQ=YEARLY/i.test(anyEv.rrule)) {
+      // Check if RRULE has an UNTIL clause that excludes the target year
+      const untilMatch = anyEv.rrule.match(/UNTIL=(\d{8}T\d{6}Z?|\d{8})/);
+      if (untilMatch) {
+        const untilDate = parseICSDate(untilMatch[1]);
+        if (untilDate.getUTCFullYear() < targetYear || 
+            (untilDate.getUTCFullYear() === targetYear && untilDate.getUTCMonth() * 31 + untilDate.getUTCDate() < targetYear * 365)) {
+          // Event doesn't recur in the target year
+          continue;
+        }
+      }
+      
       // create an instance for the target year preserving time and all-day nature
       const sd = ev.startDate;
       const ed = ev.endDate;

@@ -66,6 +66,7 @@ const App: React.FC = () => {
   const [config, setConfig] = useState<AppConfig>(DEFAULT_CONFIG);
   const [monthConfigs, setMonthConfigs] = useState<MonthConfig[]>([]);
   const [calendars, setCalendars] = useState<CalendarSource[]>([]);
+  const [pendingCalendarColor, setPendingCalendarColor] = useState<string>('#8295AF');
   const [exportLoading, setExportLoading] = useState(false);
   const [exportType, setExportType] = useState<'PDF' | 'PNG' | null>(null);
   const [exportProgress, setExportProgress] = useState(0);
@@ -93,7 +94,11 @@ const App: React.FC = () => {
 
   const activeEvents = calendars
     .filter(cal => cal.active)
-    .flatMap(cal => cal.events);
+    .flatMap(cal => cal.events.map(event => ({ 
+      ...event, 
+      calendarId: cal.id,
+      calendarColor: cal.color 
+    })));
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -120,7 +125,7 @@ const App: React.FC = () => {
         name: file.name.replace('.ics', ''),
         events: expanded,
         active: true,
-        color: config.primaryColor
+        color: pendingCalendarColor
       };
 
       setCalendars(prev => [...prev, newCalendar]);
@@ -143,6 +148,12 @@ const App: React.FC = () => {
       });
       return updated;
     });
+  };
+
+  const updateCalendarColor = (id: string, color: string) => {
+    setCalendars(prev => prev.map(cal => 
+      cal.id === id ? { ...cal, color } : cal
+    ));
   };
 
   const deleteCalendar = (id: string) => {
@@ -325,13 +336,17 @@ const App: React.FC = () => {
         <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">{label}</label>
         <button
           onClick={() => updateConfig(visibilityKey, !config[visibilityKey])}
-          className={`px-3 py-1 rounded-full text-[8px] font-black uppercase transition-all ${
+          className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
             config[visibilityKey] 
-              ? 'bg-indigo-600 text-white' 
-              : 'bg-slate-200 text-slate-600'
+              ? 'bg-indigo-600' 
+              : 'bg-slate-300'
           }`}
         >
-          {config[visibilityKey] ? 'ON' : 'OFF'}
+          <span
+            className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+              config[visibilityKey] ? 'translate-x-6' : 'translate-x-1'
+            }`}
+          />
         </button>
       </div>
       <div className="space-y-2">
@@ -342,11 +357,19 @@ const App: React.FC = () => {
             onChange={(e) => updateConfig(fontKey, e.target.value as any)}
             className="flex-grow px-2 py-1 bg-slate-50 border-none rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none text-[10px] font-bold"
           >
+            <option value="sans">Inter</option>
             <option value="serif-elegant">Playfair</option>
             <option value="serif-classic">Lora</option>
-            <option value="sans">Inter</option>
             <option value="modern">Montserrat</option>
-            <option value="mono">Space</option>
+            <option value="mono">Space Mono</option>
+            <option value="poppins">Poppins</option>
+            <option value="merriweather">Merriweather</option>
+            <option value="roboto">Roboto</option>
+            <option value="georgia">Georgia</option>
+            <option value="courier">Courier Prime</option>
+            <option value="plex-serif">IBM Plex Serif</option>
+            <option value="raleway">Raleway</option>
+            <option value="garamond">EB Garamond</option>
           </select>
           <input 
             disabled={!config[visibilityKey]}
@@ -443,13 +466,17 @@ const App: React.FC = () => {
                     <label className="text-[10px] font-black text-slate-500 uppercase">Theme Accent</label>
                     <button
                       onClick={() => updateConfig('showAccent', !config.showAccent)}
-                      className={`px-3 py-1 rounded-full text-[8px] font-black uppercase transition-all ${
+                      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
                         config.showAccent 
-                          ? 'bg-indigo-600 text-white' 
-                          : 'bg-slate-200 text-slate-600'
+                          ? 'bg-indigo-600' 
+                          : 'bg-slate-300'
                       }`}
                     >
-                      {config.showAccent ? 'ON' : 'OFF'}
+                      <span
+                        className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                          config.showAccent ? 'translate-x-6' : 'translate-x-1'
+                        }`}
+                      />
                     </button>
                   </div>
                   {config.showAccent && (
@@ -563,25 +590,48 @@ const App: React.FC = () => {
             </button>
             {expandedSections.calendars && (
               <div className="px-4 py-4 space-y-3 bg-slate-50/50">
+                <div className="space-y-2">
+                  <label className="text-[10px] font-bold text-slate-500 uppercase">Default Color</label>
+                  <div className="flex items-center gap-2">
+                    <input 
+                      type="color" 
+                      value={pendingCalendarColor}
+                      onChange={(e) => setPendingCalendarColor(e.target.value)}
+                      className="w-10 h-8 rounded border border-slate-200 cursor-pointer"
+                    />
+                    <span className="text-[9px] font-mono text-slate-600">{pendingCalendarColor}</span>
+                  </div>
+                </div>
                 <div className="p-2 border-2 border-dashed border-slate-200 rounded bg-white hover:border-indigo-200 transition-all cursor-pointer relative">
                   <input type="file" accept=".ics" onChange={handleFileUpload} className="absolute inset-0 opacity-0 cursor-pointer" />
                   <p className="text-center text-[9px] font-black text-slate-400 uppercase">Import .ics</p>
                 </div>
                 <div className="space-y-2">
                   {calendars.map(cal => (
-                    <div key={cal.id} className="flex items-center justify-between p-2 bg-white rounded border border-slate-100">
+                    <div key={cal.id} className="flex items-center justify-between p-2 bg-white rounded border border-slate-100 gap-2">
                       <button
                         onClick={() => toggleCalendar(cal.id)}
-                        className={`px-2 py-0.5 rounded text-[8px] font-black uppercase transition-all ${
+                        className={`relative inline-flex h-5 w-10 items-center rounded-full transition-colors flex-shrink-0 ${
                           cal.active
-                            ? 'bg-indigo-600 text-white'
-                            : 'bg-slate-200 text-slate-600'
+                            ? 'bg-indigo-600'
+                            : 'bg-slate-300'
                         }`}
                       >
-                        {cal.active ? 'ON' : 'OFF'}
+                        <span
+                          className={`inline-block h-3 w-3 transform rounded-full bg-white transition-transform ${
+                            cal.active ? 'translate-x-5' : 'translate-x-1'
+                          }`}
+                        />
                       </button>
-                      <span className="text-[9px] font-bold text-slate-700 flex-grow truncate px-2">{cal.name}</span>
-                      <button onClick={() => deleteCalendar(cal.id)} className="p-1 hover:bg-red-50 text-slate-300 hover:text-red-500">
+                      <input 
+                        type="color" 
+                        value={cal.color}
+                        onChange={(e) => updateCalendarColor(cal.id, e.target.value)}
+                        className="w-8 h-6 rounded border border-slate-200 cursor-pointer flex-shrink-0"
+                        title={`Color for ${cal.name}`}
+                      />
+                      <span className="text-[9px] font-bold text-slate-700 flex-grow truncate">{cal.name}</span>
+                      <button onClick={() => deleteCalendar(cal.id)} className="p-1 hover:bg-red-50 text-slate-300 hover:text-red-500 flex-shrink-0">
                         <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" /></svg>
                       </button>
                     </div>
