@@ -43,6 +43,10 @@ export const parseICS = (data: string): CalendarEvent[] => {
         case 'SUMMARY':
           currentEvent.title = value.replace(/\\,/g, ',').replace(/\\n/g, '\n');
           break;
+        case 'RRULE':
+          // store raw RRULE for later expansion
+          (currentEvent as any).rrule = value;
+          break;
         case 'DTSTART':
           currentEvent.startDate = parseICSDate(value);
           break;
@@ -58,6 +62,59 @@ export const parseICS = (data: string): CalendarEvent[] => {
   return events;
 };
 
+// Expand recurring events into instances within a single target year.
+export const expandRecurringForYear = (events: CalendarEvent[], targetYear: number): CalendarEvent[] => {
+  const expanded: CalendarEvent[] = [];
+
+  for (const ev of events) {
+    const anyEv = ev as any;
+    if (anyEv.rrule && /FREQ=YEARLY/i.test(anyEv.rrule)) {
+      // create an instance for the target year preserving time and all-day nature
+      const sd = ev.startDate;
+      const ed = ev.endDate;
+
+      // Check if this is an all-day event
+      const isAllDay = 
+        sd.getUTCHours() === 0 && sd.getUTCMinutes() === 0 && sd.getUTCSeconds() === 0 &&
+        (!ed || (ed.getUTCHours() === 0 && ed.getUTCMinutes() === 0 && ed.getUTCSeconds() === 0));
+
+      const newStart = new Date(Date.UTC(sd.getUTCFullYear(), sd.getUTCMonth(), sd.getUTCDate(), sd.getUTCHours(), sd.getUTCMinutes(), sd.getUTCSeconds()));
+      newStart.setUTCFullYear(targetYear);
+
+      let newEnd: Date | undefined = undefined;
+      if (ed && isAllDay) {
+        // For all-day events, DTEND is exclusive. If it's exactly one day after DTSTART, don't include it.
+        const startDay = new Date(Date.UTC(sd.getUTCFullYear(), sd.getUTCMonth(), sd.getUTCDate()));
+        const endDay = new Date(Date.UTC(ed.getUTCFullYear(), ed.getUTCMonth(), ed.getUTCDate()));
+        const diffDays = (endDay.getTime() - startDay.getTime()) / (1000 * 60 * 60 * 24);
+        
+        if (diffDays > 1) {
+          // Multi-day event: set DTEND to the new year
+          newEnd = new Date(Date.UTC(ed.getUTCFullYear(), ed.getUTCMonth(), ed.getUTCDate(), ed.getUTCHours(), ed.getUTCMinutes(), ed.getUTCSeconds()));
+          newEnd.setUTCFullYear(targetYear);
+        }
+        // If diffDays === 1, DTEND is exclusive and represents end-of-day for the same day, so no DTEND needed
+      } else if (ed && !isAllDay) {
+        // Timed event: preserve DTEND as-is
+        newEnd = new Date(Date.UTC(ed.getUTCFullYear(), ed.getUTCMonth(), ed.getUTCDate(), ed.getUTCHours(), ed.getUTCMinutes(), ed.getUTCSeconds()));
+        newEnd.setUTCFullYear(targetYear);
+      }
+
+      expanded.push({
+        title: ev.title,
+        startDate: newStart,
+        endDate: newEnd,
+        description: ev.description
+      });
+    } else {
+      // Non-recurring: keep if it falls in the target year
+      if (ev.startDate.getUTCFullYear() === targetYear) expanded.push(ev);
+    }
+  }
+
+  return expanded;
+};
+
 const parseICSDate = (icsDate: string): Date => {
   // Matches YYYYMMDDTHHMMSSZ or YYYYMMDD
   const match = icsDate.trim().match(/^(\d{4})(\d{2})(\d{2})(?:T(\d{2})(\d{2})(\d{2})(Z)?)?/);
@@ -66,11 +123,11 @@ const parseICSDate = (icsDate: string): Date => {
     // Fallback for cases where value might be wrapped or unusual
     const fallbackMatch = icsDate.match(/(\d{4})(\d{2})(\d{2})/);
     if (fallbackMatch) {
-      return new Date(
-        parseInt(fallbackMatch[1]),
-        parseInt(fallbackMatch[2]) - 1,
-        parseInt(fallbackMatch[3])
-      );
+      const year = parseInt(fallbackMatch[1]);
+      const month = parseInt(fallbackMatch[2]) - 1;
+      const day = parseInt(fallbackMatch[3]);
+      // Use UTC for all-day events to avoid timezone shift
+      return new Date(Date.UTC(year, month, day));
     }
     return new Date();
   }
@@ -91,6 +148,6 @@ const parseICSDate = (icsDate: string): Date => {
     }
   }
   
-  // All-day event (YYYYMMDD)
-  return new Date(year, month, day);
+  // All-day event (YYYYMMDD) - use UTC to avoid timezone shift
+  return new Date(Date.UTC(year, month, day));
 };

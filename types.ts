@@ -4,6 +4,8 @@ export interface CalendarEvent {
   startDate: Date;
   endDate?: Date;
   description?: string;
+  // Optional raw RRULE string (e.g. "FREQ=YEARLY;...")
+  rrule?: string;
 }
 
 export interface CalendarSource {
