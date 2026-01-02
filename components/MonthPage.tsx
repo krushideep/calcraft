@@ -34,7 +34,15 @@ const MonthPage: React.FC<MonthPageProps> = ({ config, monthConfig, events, inde
     'serif-elegant': 'font-serif-elegant',
     'serif-classic': 'font-serif-classic',
     'mono': 'font-mono-tech',
-    'modern': 'font-sans-modern'
+    'modern': 'font-sans-modern',
+    'poppins': 'font-poppins',
+    'merriweather': 'font-merriweather',
+    'roboto': 'font-roboto',
+    'georgia': 'font-georgia',
+    'courier': 'font-courier',
+    'plex-serif': 'font-plex-serif',
+    'raleway': 'font-raleway',
+    'garamond': 'font-garamond'
   }[font]);
 
   const getAlignClass = (align: 'left' | 'center' | 'right') => {
@@ -232,9 +240,12 @@ const MonthPage: React.FC<MonthPageProps> = ({ config, monthConfig, events, inde
                       {cell.day}
                     </div>
                     <div className={`overflow-hidden flex-grow ${getFontClass(config.eventFont)}`}>
-                      {config.showEvents && dayEvents.slice(0, 2).map((event, eIdx) => (
-                        <div key={eIdx} className="leading-tight p-0.5 mb-0.5 rounded truncate border-l-2 font-medium" style={{ backgroundColor: config.showAccent ? `${config.primaryColor}10` : '#f1f5f9', borderLeftColor: config.showAccent ? themeColor : '#cbd5e1', fontSize: `${config.eventSize}px`, color: config.eventColor }}>{event.title}</div>
-                      ))}
+                      {config.showEvents && dayEvents.slice(0, 2).map((event, eIdx) => {
+                        const eventColor = (event as any).calendarColor || config.primaryColor;
+                        return (
+                          <div key={eIdx} className="leading-tight p-0.5 mb-0.5 rounded truncate border-l-2 font-medium" style={{ backgroundColor: config.showAccent ? `${eventColor}10` : '#f1f5f9', borderLeftColor: config.showAccent ? eventColor : '#cbd5e1', fontSize: `${config.eventSize}px`, color: config.eventColor }}>{event.title}</div>
+                        );
+                      })}
                       {dayEvents.length > 2 && <div className="text-[7px] text-slate-400 text-center font-bold">+{dayEvents.length - 2}</div>}
                     </div>
                   </div>

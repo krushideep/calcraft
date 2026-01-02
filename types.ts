@@ -16,7 +16,7 @@ export interface CalendarSource {
   color: string;
 }
 
-export type CalendarFont = 'sans' | 'serif-elegant' | 'serif-classic' | 'mono' | 'modern';
+export type CalendarFont = 'sans' | 'serif-elegant' | 'serif-classic' | 'mono' | 'modern' | 'poppins' | 'merriweather' | 'roboto' | 'georgia' | 'courier' | 'plex-serif' | 'raleway' | 'garamond';
 export type PageSize = 'A4' | 'A5' | 'custom';
 export type LayoutBlock = 'header' | 'image' | 'grid' | 'quote';
 export type Alignment = 'left' | 'center' | 'right';
