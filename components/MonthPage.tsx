@@ -248,7 +248,7 @@ const MonthPage: React.FC<MonthPageProps> = ({ config, monthConfig, events, inde
   };
 
   return (
-    <div className="pdf-page-container html2pdf__page-break flex flex-col bg-white calendar-page-shadow p-12" style={{ width: `${widthMm}mm`, height: `${heightMm}mm`, boxSizing: 'border-box' }}>
+    <div className="pdf-page-container html2pdf__page-break flex flex-col bg-white calendar-page-shadow p-4 sm:p-6 md:p-12" style={{ width: `${widthMm}mm`, height: `${heightMm}mm`, padding: 'clamp(1rem, 3vw, 3rem)', boxSizing: 'border-box' }}>
       {config.layoutOrder.map(block => renderBlock(block))}
       <div className={`mt-auto pt-4 text-center text-[7px] text-slate-300 uppercase tracking-[0.3em] border-t shrink-0 ${getFontClass(config.yearFont)}`}>
         {monthName} {monthConfig.year} &bull; Crafted by CalCraft Studio

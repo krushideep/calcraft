@@ -70,6 +70,15 @@ const App: React.FC = () => {
   const [exportType, setExportType] = useState<'PDF' | 'PNG' | null>(null);
   const [exportProgress, setExportProgress] = useState(0);
   const [showHelp, setShowHelp] = useState(false);
+  const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
+    design: true,
+    typography: false,
+    layout: false,
+    calendars: false,
+    images: false,
+    exports: false,
+    tools: false,
+  });
   const calendarRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -303,12 +312,16 @@ const App: React.FC = () => {
     <div className={`space-y-2 p-3 bg-white/50 rounded-xl border border-slate-100 transition-opacity ${!config[visibilityKey] ? 'opacity-40' : 'opacity-100'}`}>
       <div className="flex items-center justify-between mb-1">
         <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">{label}</label>
-        <input 
-          type="checkbox" 
-          checked={config[visibilityKey] as boolean}
-          onChange={(e) => updateConfig(visibilityKey, e.target.checked)}
-          className="w-3 h-3 rounded text-indigo-600 cursor-pointer"
-        />
+        <button
+          onClick={() => updateConfig(visibilityKey, !config[visibilityKey])}
+          className={`px-3 py-1 rounded-full text-[8px] font-black uppercase transition-all ${
+            config[visibilityKey] 
+              ? 'bg-indigo-600 text-white' 
+              : 'bg-slate-200 text-slate-600'
+          }`}
+        >
+          {config[visibilityKey] ? 'ON' : 'OFF'}
+        </button>
       </div>
       <div className="space-y-2">
         <div className="flex gap-2">
@@ -362,48 +375,153 @@ const App: React.FC = () => {
     </div>
   );
 
+  const toggleSection = (section: string) => {
+    setExpandedSections(prev => ({
+      ...prev,
+      [section]: !prev[section]
+    }));
+  };
+
   return (
     <div className="min-h-screen flex flex-col md:flex-row bg-slate-100 font-sans">
-      <aside className="no-print w-full md:w-80 h-auto md:h-screen md:sticky top-0 bg-white border-r border-slate-200 shadow-xl z-20 flex flex-col">
-        <div className="p-6 border-b bg-indigo-50/30">
-          <h1 className="text-2xl font-black text-slate-800 flex items-center gap-2">
-            <span className="bg-indigo-600 text-white p-1 rounded-lg">CC</span>
-            CalCraft
+      <aside className="no-print w-full md:w-64 h-auto md:h-screen md:sticky top-0 bg-white border-r border-slate-200 shadow-xl z-20 flex flex-col">
+        <div className="p-4 border-b bg-indigo-50/30">
+          <h1 className="text-lg font-black text-slate-800 flex items-center gap-2">
+            <span className="bg-indigo-600 text-white p-1 rounded-lg text-sm">CC</span>
+            <span className="text-lg">CalCraft</span>
           </h1>
         </div>
 
-        <div className="flex-grow overflow-y-auto p-6 space-y-8">
-          <section>
-            <h3 className="text-[11px] font-black text-slate-400 mb-4 uppercase tracking-[0.2em]">Layout Architecture</h3>
-            <div className="space-y-3">
-              {config.layoutOrder.map((block, idx) => {
-                const heightKey = `${block}Height` as keyof AppConfig;
-                return (
-                  <div key={block} className="space-y-2 p-3 bg-slate-50 rounded-xl border border-slate-100 group">
-                    <div className="flex items-center justify-between">
-                      <span className="text-[10px] font-black uppercase text-slate-600 tracking-wider">
-                        {block === 'header' ? 'Title & Year' : block === 'grid' ? 'Calendar Grid' : block.charAt(0).toUpperCase() + block.slice(1)}
-                      </span>
-                      <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <button 
-                          onClick={() => moveBlock(idx, 'up')}
-                          disabled={idx === 0}
-                          className="p-1 hover:bg-white rounded shadow-sm disabled:opacity-30"
-                        >
-                          <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 15l7-7 7 7" /></svg>
-                        </button>
-                        <button 
-                          onClick={() => moveBlock(idx, 'down')}
-                          disabled={idx === config.layoutOrder.length - 1}
-                          className="p-1 hover:bg-white rounded shadow-sm disabled:opacity-30"
-                        >
-                          <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M19 9l-7 7-7-7" /></svg>
-                        </button>
-                      </div>
+        <div className="flex-grow overflow-y-auto space-y-0">
+          {/* Design Section */}
+          <div className="border-b border-slate-100">
+            <button
+              onClick={() => toggleSection('design')}
+              className="w-full px-4 py-3 flex items-center justify-between hover:bg-slate-50 transition-colors"
+            >
+              <div className="flex items-center gap-3">
+                 <span className="text-sm font-black text-slate-700">Design</span>
+              </div>
+              <svg xmlns="http://www.w3.org/2000/svg" className={`w-4 h-4 text-slate-400 transition-transform ${expandedSections.design ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" /></svg>
+            </button>
+            {expandedSections.design && (
+              <div className="px-4 py-4 space-y-4 bg-slate-50/50">
+                <div className="space-y-2">
+                  <label className="text-[10px] font-bold text-slate-500 uppercase">Year</label>
+                  <input 
+                    type="number" 
+                    value={config.year} 
+                    onChange={(e) => updateConfig('year', parseInt(e.target.value))}
+                    className="w-full px-2 py-1 text-xs bg-white border border-slate-200 rounded"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-[10px] font-bold text-slate-500 uppercase">Page Size</label>
+                  <select 
+                    value={config.pageSize}
+                    onChange={(e) => updateConfig('pageSize', e.target.value as PageSize)}
+                    className="w-full px-2 py-1 text-xs bg-white border border-slate-200 rounded"
+                  >
+                    <option value="A4">A4</option>
+                    <option value="A5">A5</option>
+                    <option value="custom">Custom</option>
+                  </select>
+                </div>
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <label className="text-[10px] font-black text-slate-500 uppercase">Theme Accent</label>
+                    <button
+                      onClick={() => updateConfig('showAccent', !config.showAccent)}
+                      className={`px-3 py-1 rounded-full text-[8px] font-black uppercase transition-all ${
+                        config.showAccent 
+                          ? 'bg-indigo-600 text-white' 
+                          : 'bg-slate-200 text-slate-600'
+                      }`}
+                    >
+                      {config.showAccent ? 'ON' : 'OFF'}
+                    </button>
+                  </div>
+                  {config.showAccent && (
+                    <div className="flex gap-2">
+                      <input 
+                        type="color" 
+                        value={config.primaryColor} 
+                        onChange={(e) => updateConfig('primaryColor', e.target.value)} 
+                        className="w-8 h-8 rounded border border-slate-200 cursor-pointer" 
+                      />
+                      <input 
+                        type="text" 
+                        value={config.primaryColor.toUpperCase()} 
+                        onChange={(e) => updateConfig('primaryColor', e.target.value)} 
+                        className="flex-grow px-2 py-1 text-xs font-mono border border-slate-200 rounded" 
+                      />
                     </div>
-                    
-                    <div className="flex items-center gap-2">
-                      <span className="text-[8px] font-bold text-slate-400 uppercase w-10">Height</span>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Typography Section */}
+          <div className="border-b border-slate-100">
+            <button
+              onClick={() => toggleSection('typography')}
+              className="w-full px-4 py-3 flex items-center justify-between hover:bg-slate-50 transition-colors"
+            >
+              <div className="flex items-center gap-3">
+                <span className="text-sm font-black text-slate-700">Typography</span>
+              </div>
+              <svg xmlns="http://www.w3.org/2000/svg" className={`w-4 h-4 text-slate-400 transition-transform ${expandedSections.typography ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" /></svg>
+            </button>
+            {expandedSections.typography && (
+              <div className="px-4 py-4 space-y-3 bg-slate-50/50">
+                <StyleControl label="Month Title" fontKey="titleFont" sizeKey="titleSize" colorKey="titleColor" visibilityKey="showTitle" alignKey="titleAlign" />
+                <StyleControl label="Year Label" fontKey="yearFont" sizeKey="yearSize" colorKey="yearColor" visibilityKey="showYear" alignKey="yearAlign" />
+                <StyleControl label="Grid Numbers" fontKey="gridFont" sizeKey="gridSize" colorKey="gridColor" visibilityKey="showGrid" alignKey="gridAlign" />
+                <StyleControl label="Events" fontKey="eventFont" sizeKey="eventSize" colorKey="eventColor" visibilityKey="showEvents" />
+                <StyleControl label="Quote" fontKey="quoteFont" sizeKey="quoteSize" colorKey="quoteColor" visibilityKey="showQuotes" />
+              </div>
+            )}
+          </div>
+
+          {/* Layout Section */}
+          <div className="border-b border-slate-100">
+            <button
+              onClick={() => toggleSection('layout')}
+              className="w-full px-4 py-3 flex items-center justify-between hover:bg-slate-50 transition-colors"
+            >
+              <div className="flex items-center gap-3">
+                <span className="text-sm font-black text-slate-700">Layout</span>
+              </div>
+              <svg xmlns="http://www.w3.org/2000/svg" className={`w-4 h-4 text-slate-400 transition-transform ${expandedSections.layout ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" /></svg>
+            </button>
+            {expandedSections.layout && (
+              <div className="px-4 py-4 space-y-3 bg-slate-50/50">
+                {config.layoutOrder.map((block, idx) => {
+                  const heightKey = `${block}Height` as keyof AppConfig;
+                  return (
+                    <div key={block} className="space-y-2 p-2 bg-white rounded border border-slate-100">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[9px] font-black uppercase text-slate-600">
+                          {block === 'header' ? 'Title & Year' : block === 'grid' ? 'Calendar Grid' : block.charAt(0).toUpperCase() + block.slice(1)}
+                        </span>
+                        <div className="flex gap-1">
+                          <button 
+                            onClick={() => moveBlock(idx, 'up')}
+                            disabled={idx === 0}
+                            className="p-0.5 hover:bg-slate-100 rounded disabled:opacity-30"
+                          >
+                            <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 15l7-7 7 7" /></svg>
+                          </button>
+                          <button 
+                            onClick={() => moveBlock(idx, 'down')}
+                            disabled={idx === config.layoutOrder.length - 1}
+                            className="p-0.5 hover:bg-slate-100 rounded disabled:opacity-30"
+                          >
+                            <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M19 9l-7 7-7-7" /></svg>
+                          </button>
+                        </div>
+                      </div>
                       <input 
                         type="range" 
                         min={block === 'grid' ? 0 : 20} 
@@ -411,244 +529,149 @@ const App: React.FC = () => {
                         step={10}
                         value={config[heightKey] as number}
                         onChange={(e) => updateConfig(heightKey, parseInt(e.target.value))}
-                        className="flex-grow h-1 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-indigo-600"
-                      />
-                      <span className="text-[8px] font-black text-indigo-600 w-8 text-right">
-                        {config[heightKey] === 0 ? 'Auto' : `${config[heightKey]}px`}
-                      </span>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </section>
-
-          <section>
-            <h3 className="text-[11px] font-black text-slate-400 mb-4 uppercase tracking-[0.2em]">Typography Styles</h3>
-            <div className="space-y-3">
-              <StyleControl label="Month Title" fontKey="titleFont" sizeKey="titleSize" colorKey="titleColor" visibilityKey="showTitle" alignKey="titleAlign" />
-              <StyleControl label="Year Label" fontKey="yearFont" sizeKey="yearSize" colorKey="yearColor" visibilityKey="showYear" alignKey="yearAlign" />
-              <StyleControl label="Grid Numbers" fontKey="gridFont" sizeKey="gridSize" colorKey="gridColor" visibilityKey="showGrid" alignKey="gridAlign" />
-              
-              {config.showGrid && (
-                <div className="px-3 py-3 bg-indigo-50/50 rounded-xl border border-indigo-100 space-y-3">
-                   <p className="text-[9px] font-black text-indigo-500 uppercase tracking-widest mb-1">Grid Advanced</p>
-                   <div className="flex flex-wrap gap-4">
-                      <label className="flex items-center gap-2 cursor-pointer">
-                        <input type="checkbox" checked={config.gridShowLines} onChange={(e) => updateConfig('gridShowLines', e.target.checked)} className="w-3 h-3 rounded" />
-                        <span className="text-[9px] font-bold uppercase text-slate-500">Lines</span>
-                      </label>
-                      <label className="flex items-center gap-2 cursor-pointer">
-                        <input type="checkbox" checked={config.gridTransparent} onChange={(e) => updateConfig('gridTransparent', e.target.checked)} className="w-3 h-3 rounded" />
-                        <span className="text-[9px] font-bold uppercase text-slate-500">Clear BG</span>
-                      </label>
-                   </div>
-                   <div className="space-y-1">
-                      <div className="flex justify-between items-center">
-                        <span className="text-[9px] font-bold uppercase text-slate-500">Layout Rows</span>
-                        <span className="text-[10px] font-black text-indigo-600">{config.gridRows === 0 ? 'AUTO (7 Col)' : config.gridRows === 1 ? 'LINEAR (1 Row)' : `${config.gridRows} Rows`}</span>
-                      </div>
-                      <input 
-                        type="range" min="0" max="6" step="1" 
-                        value={config.gridRows} 
-                        onChange={(e) => updateConfig('gridRows', parseInt(e.target.value))}
                         className="w-full h-1 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-indigo-600"
                       />
-                      <p className="text-[8px] text-slate-400 italic">0 = Standard calendar. 1 = Single strip.</p>
-                   </div>
-                </div>
-              )}
-
-              <StyleControl label="Day" fontKey="dayFont" sizeKey="daySize" colorKey="dayColor" visibilityKey="showGrid" />
-              <StyleControl label="Event Details" fontKey="eventFont" sizeKey="eventSize" colorKey="eventColor" visibilityKey="showEvents" />
-              <StyleControl label="Inspiration Text" fontKey="quoteFont" sizeKey="quoteSize" colorKey="quoteColor" visibilityKey="showQuotes" alignKey="quoteAlign" />
-            </div>
-          </section>
-
-          <section>
-            <h3 className="text-[11px] font-black text-slate-400 mb-4 uppercase tracking-[0.2em]">Format & Settings</h3>
-            <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-2">
-                <div>
-                  <label className="block text-[10px] font-bold text-slate-400 mb-1 uppercase">Year</label>
-                  <input 
-                    type="number" 
-                    value={config.year} 
-                    onChange={(e) => updateConfig('year', parseInt(e.target.value))}
-                    className="w-full px-3 py-2 bg-slate-50 border-none rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none text-xs font-bold"
-                  />
-                </div>
-                <div>
-                  <label className="block text-[10px] font-bold text-slate-400 mb-1 uppercase">Size</label>
-                  <select 
-                    value={config.pageSize}
-                    onChange={(e) => updateConfig('pageSize', e.target.value as PageSize)}
-                    className="w-full px-3 py-2 bg-slate-50 border-none rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none text-xs font-bold"
-                  >
-                    <option value="A4">A4</option>
-                    <option value="A5">A5</option>
-                    <option value="custom">Custom</option>
-                  </select>
-                </div>
+                      <span className="text-[8px] font-bold text-indigo-600">{config[heightKey] === 0 ? 'Auto' : `${config[heightKey]}px`}</span>
+                    </div>
+                  );
+                })}
               </div>
-
-              <div className={`space-y-2 p-3 bg-white/50 rounded-xl border border-slate-100 transition-opacity ${!config.showAccent ? 'opacity-40' : 'opacity-100'}`}>
-                <div className="flex items-center justify-between mb-1">
-                  <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest">Theme Accent</label>
-                  <input 
-                    type="checkbox" 
-                    checked={config.showAccent}
-                    onChange={(e) => updateConfig('showAccent', e.target.checked)}
-                    className="w-3 h-3 rounded text-indigo-600 cursor-pointer"
-                  />
-                </div>
-                <div className="flex gap-2">
-                  <input 
-                    disabled={!config.showAccent}
-                    type="color" 
-                    value={config.primaryColor} 
-                    onChange={(e) => updateConfig('primaryColor', e.target.value)} 
-                    className="w-10 h-10 border-none rounded-xl cursor-pointer bg-slate-50 p-1" 
-                  />
-                  <input 
-                    disabled={!config.showAccent}
-                    type="text" 
-                    value={config.primaryColor.toUpperCase()} 
-                    onChange={(e) => updateConfig('primaryColor', e.target.value)} 
-                    className="flex-grow px-4 py-2 bg-slate-50 border-none rounded-xl text-xs font-mono font-bold" 
-                  />
-                </div>
-              </div>
-            </div>
-          </section>
-
-          <section>
-            <h3 className="text-[11px] font-black text-slate-400 mb-4 uppercase tracking-[0.2em]">Calendars & Events</h3>
-            <div className="p-4 border-2 border-dashed border-slate-100 rounded-2xl bg-slate-50 hover:bg-indigo-50/50 hover:border-indigo-100 transition-all cursor-pointer relative mb-4">
-              <input type="file" accept=".ics" onChange={handleFileUpload} className="absolute inset-0 opacity-0 cursor-pointer" />
-              <p className="text-center text-[10px] font-black text-slate-400 uppercase tracking-widest">Import .ics</p>
-            </div>
-            
-            <div className="space-y-2 mb-6">
-              {calendars.map(cal => (
-                <div key={cal.id} className="flex items-center justify-between p-3 bg-slate-50 rounded-xl border border-slate-100 group">
-                  <div className="flex items-center gap-3">
-                    <input 
-                      type="checkbox" 
-                      checked={cal.active} 
-                      onChange={() => toggleCalendar(cal.id)}
-                      className="w-3 h-3 rounded text-indigo-600 cursor-pointer"
-                    />
-                    <span className="text-[10px] font-bold text-slate-700 truncate max-w-[120px]">
-                      {cal.name}
-                    </span>
-                  </div>
-                  <button 
-                    onClick={() => deleteCalendar(cal.id)}
-                    className="p-1 hover:bg-red-50 text-slate-300 hover:text-red-500 rounded transition-colors"
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" /></svg>
-                  </button>
-                </div>
-              ))}
-              {calendars.length === 0 && (
-                <p className="text-[9px] text-slate-400 text-center italic py-2">No calendars imported</p>
-              )}
-            </div>
-
-            <h4 className="text-[9px] font-black text-slate-400 mb-2 uppercase tracking-widest">Custom Content</h4>
-            <div className="space-y-4">
-              <div className="grid grid-cols-4 gap-2">
-                {monthConfigs.map((m, idx) => (
-                  <label key={idx} className="relative aspect-square rounded-lg bg-slate-100 overflow-hidden cursor-pointer hover:ring-2 hover:ring-indigo-500 transition-all">
-                    <input type="file" accept="image/*" className="hidden" onChange={(e) => handleImageUpload(idx, e)} />
-                    {m.image && <img src={m.image} crossOrigin="anonymous" className="w-full h-full object-cover opacity-80" />}
-                    <div className="absolute inset-0 flex items-center justify-center bg-black/10 opacity-0 hover:opacity-100"><span className="text-[8px] font-black text-white">{new Date(m.year, m.month).toLocaleString('default', { month: 'short' })}</span></div>
-                  </label>
-                ))}
-              </div>
-              
-              <div className="space-y-2">
-                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Manual Quotes</label>
-                <select 
-                  className="w-full px-3 py-2 bg-slate-50 border-none rounded-xl text-xs font-bold focus:ring-2 focus:ring-indigo-500"
-                  onChange={(e) => {
-                    const idx = parseInt(e.target.value);
-                    const promptText = prompt(`Enter quote for ${new Date(config.year, idx).toLocaleString('default', { month: 'long' })}`, monthConfigs[idx].quote || "");
-                    if (promptText !== null) handleQuoteChange(idx, promptText);
-                  }}
-                  value=""
-                >
-                  <option value="" disabled>Select Month to Edit...</option>
-                  {monthConfigs.map((m, idx) => (
-                    <option key={idx} value={idx}>{new Date(config.year, m.month).toLocaleString('default', { month: 'long' })}</option>
-                  ))}
-                </select>
-              </div>
-            </div>
-          </section>
-        </div>
-
-        <div className="p-6 bg-white border-t mt-auto shadow-xl space-y-3">
-          <div className="grid grid-cols-3 gap-3">
-            <button 
-              onClick={handleExportPDF} 
-              disabled={exportLoading} 
-              className="flex flex-col items-center justify-center gap-1 bg-slate-900 text-white py-3 rounded-2xl font-black uppercase tracking-[0.1em] text-[10px] hover:bg-indigo-600 transition-all shadow-xl disabled:opacity-50"
-            >
-              {exportLoading && exportType === 'PDF' ? (
-                <div className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin"></div>
-              ) : (
-                <>
-                  <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 mb-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
-                  PDF
-                </>
-              )}
-            </button>
-            <button 
-              onClick={handleExportImages} 
-              disabled={exportLoading} 
-              className="flex flex-col items-center justify-center gap-1 bg-slate-100 text-slate-800 py-3 rounded-2xl font-black uppercase tracking-[0.1em] text-[10px] hover:bg-indigo-50 transition-all shadow-sm border border-slate-200 disabled:opacity-50"
-            >
-              {exportLoading && exportType === 'PNG' ? (
-                 <div className="w-4 h-4 border-2 border-slate-300 border-t-indigo-600 rounded-full animate-spin"></div>
-              ) : (
-                <>
-                  <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 mb-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
-                  PNGs
-                </>
-              )}
-            </button>
-            <button
-              onClick={() => {
-                setShowHelp(true);
-                posthog.capture('help_opened');
-              }}
-              className="flex flex-col items-center justify-center gap-1 bg-indigo-50 text-indigo-800 py-3 rounded-2xl font-black uppercase tracking-[0.1em] text-[10px] hover:bg-indigo-100 transition-all shadow-sm border border-indigo-200"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 mb-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 18h.01M16 10h.01M12 2v2m0 16v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2m16 0h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" /></svg>
-              Help
-            </button>
+            )}
           </div>
-          
-          {exportLoading && exportType === 'PNG' && (
-            <div className="px-1">
-              <div className="flex justify-between text-[8px] font-black text-slate-500 uppercase mb-1">
-                <span>Exporting ZIP...</span>
-                <span>{exportProgress}/12</span>
+
+          {/* Calendars Section */}
+          <div className="border-b border-slate-100">
+            <button
+              onClick={() => toggleSection('calendars')}
+              className="w-full px-4 py-3 flex items-center justify-between hover:bg-slate-50 transition-colors"
+            >
+              <div className="flex items-center gap-3">
+                <span className="text-sm font-black text-slate-700">Calendars</span>
               </div>
-              <div className="w-full h-1 bg-slate-100 rounded-full overflow-hidden">
-                <div className="h-full bg-indigo-600 transition-all duration-300" style={{ width: `${(exportProgress / 12) * 100}%` }}></div>
+              <svg xmlns="http://www.w3.org/2000/svg" className={`w-4 h-4 text-slate-400 transition-transform ${expandedSections.calendars ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" /></svg>
+            </button>
+            {expandedSections.calendars && (
+              <div className="px-4 py-4 space-y-3 bg-slate-50/50">
+                <div className="p-2 border-2 border-dashed border-slate-200 rounded bg-white hover:border-indigo-200 transition-all cursor-pointer relative">
+                  <input type="file" accept=".ics" onChange={handleFileUpload} className="absolute inset-0 opacity-0 cursor-pointer" />
+                  <p className="text-center text-[9px] font-black text-slate-400 uppercase">Import .ics</p>
+                </div>
+                <div className="space-y-2">
+                  {calendars.map(cal => (
+                    <div key={cal.id} className="flex items-center justify-between p-2 bg-white rounded border border-slate-100">
+                      <button
+                        onClick={() => toggleCalendar(cal.id)}
+                        className={`px-2 py-0.5 rounded text-[8px] font-black uppercase transition-all ${
+                          cal.active
+                            ? 'bg-indigo-600 text-white'
+                            : 'bg-slate-200 text-slate-600'
+                        }`}
+                      >
+                        {cal.active ? 'ON' : 'OFF'}
+                      </button>
+                      <span className="text-[9px] font-bold text-slate-700 flex-grow truncate px-2">{cal.name}</span>
+                      <button onClick={() => deleteCalendar(cal.id)} className="p-1 hover:bg-red-50 text-slate-300 hover:text-red-500">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" /></svg>
+                      </button>
+                    </div>
+                  ))}
+                </div>
               </div>
-            </div>
-          )}
+            )}
+          </div>
+
+          {/* Images Section */}
+          <div className="border-b border-slate-100">
+            <button
+              onClick={() => toggleSection('images')}
+              className="w-full px-4 py-3 flex items-center justify-between hover:bg-slate-50 transition-colors"
+            >
+              <div className="flex items-center gap-3">
+                <span className="text-sm font-black text-slate-700">Images</span>
+              </div>
+              <svg xmlns="http://www.w3.org/2000/svg" className={`w-4 h-4 text-slate-400 transition-transform ${expandedSections.images ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" /></svg>
+            </button>
+            {expandedSections.images && (
+              <div className="px-4 py-4 space-y-3 bg-slate-50/50">
+                <div className="grid grid-cols-3 gap-2">
+                  {monthConfigs.map((m, idx) => (
+                    <label key={idx} className="relative aspect-square rounded border border-slate-200 bg-white overflow-hidden cursor-pointer hover:ring-2 hover:ring-indigo-500 transition-all">
+                      <input type="file" accept="image/*" className="hidden" onChange={(e) => handleImageUpload(idx, e)} />
+                      {m.image && <img src={m.image} crossOrigin="anonymous" className="w-full h-full object-cover opacity-80" />}
+                      <div className="absolute inset-0 flex items-center justify-center bg-black/10 opacity-0 hover:opacity-100 transition-opacity"><span className="text-[7px] font-black text-white">{new Date(m.year, m.month).toLocaleString('default', { month: 'short' })}</span></div>
+                    </label>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Exports Section */}
+          <div className="border-b border-slate-100">
+            <button
+              onClick={() => toggleSection('exports')}
+              className="w-full px-4 py-3 flex items-center justify-between hover:bg-slate-50 transition-colors"
+            >
+              <div className="flex items-center gap-3">
+                <span className="text-sm font-black text-slate-700">Exports</span>
+              </div>
+              <svg xmlns="http://www.w3.org/2000/svg" className={`w-4 h-4 text-slate-400 transition-transform ${expandedSections.exports ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" /></svg>
+            </button>
+            {expandedSections.exports && (
+              <div className="px-4 py-4 space-y-2 bg-slate-50/50">
+                <button 
+                  onClick={handleExportPDF} 
+                  disabled={exportLoading} 
+                  className="w-full px-3 py-2 bg-slate-900 text-white text-xs font-black rounded hover:bg-indigo-600 disabled:opacity-50 transition-all"
+                >
+                  Export PDF
+                </button>
+                <button 
+                  onClick={handleExportImages} 
+                  disabled={exportLoading} 
+                  className="w-full px-3 py-2 bg-slate-100 text-slate-800 text-xs font-black rounded hover:bg-indigo-50 disabled:opacity-50 transition-all"
+                >
+                  Export PNGs
+                </button>
+              </div>
+            )}
+          </div>
+
+          {/* Tools Section */}
+          <div className="border-b border-slate-100">
+            <button
+              onClick={() => toggleSection('tools')}
+              className="w-full px-4 py-3 flex items-center justify-between hover:bg-slate-50 transition-colors"
+            >
+              <div className="flex items-center gap-3">
+                <span className="text-sm font-black text-slate-700">Help</span>
+              </div>
+              <svg xmlns="http://www.w3.org/2000/svg" className={`w-4 h-4 text-slate-400 transition-transform ${expandedSections.tools ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" /></svg>
+            </button>
+            {expandedSections.tools && (
+              <div className="px-4 py-4 bg-slate-50/50">
+                <button
+                  onClick={() => {
+                    setShowHelp(true);
+                    posthog.capture('help_opened');
+                  }}
+                  className="w-full px-3 py-2 bg-indigo-50 text-indigo-700 text-xs font-black rounded hover:bg-indigo-100 transition-all"
+                >
+                  Open Help
+                </button>
+              </div>
+            )}
+          </div>
         </div>
+
       </aside>
 
-      <main className="flex-grow h-screen overflow-y-auto p-4 md:p-12 scroll-smooth bg-slate-100">
-        <div id="calendar-container" ref={calendarRef} className="mx-auto flex flex-col items-center gap-16 pb-32">
+      <main className="flex-grow h-screen overflow-y-auto p-1 sm:p-2 md:p-8 scroll-smooth bg-slate-100">
+        <div id="calendar-container" ref={calendarRef} className="mx-auto flex flex-col items-center gap-1 sm:gap-2 md:gap-6 pb-12 sm:pb-16 md:pb-24 w-full max-w-full md:max-w-6xl">
           {monthConfigs.map((mc, idx) => (
-            <MonthPage key={`${mc.year}-${mc.month}`} index={idx} config={config} monthConfig={mc} events={activeEvents} />
+            <div key={`${mc.year}-${mc.month}`} className="w-full max-w-full overflow-x-auto flex justify-center">
+              <MonthPage index={idx} config={config} monthConfig={mc} events={activeEvents} />
+            </div>
           ))}
         </div>
       </main>
