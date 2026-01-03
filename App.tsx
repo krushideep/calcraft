@@ -5,6 +5,8 @@ import { CalendarEvent, AppConfig, MonthConfig, CalendarFont, PageSize, LayoutBl
 import { parseICS } from './utils/calendarUtils';
 import MonthPage from './components/MonthPage';
 import HelpModal from './components/HelpModal';
+import ColorPicker from './components/ColorPicker';
+import './components/ColorPicker.css';
 
 declare var html2canvas: any;
 declare var html2pdf: any;
@@ -379,12 +381,9 @@ const App: React.FC = () => {
             className="w-12 px-1 py-1 bg-slate-50 border-none rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none text-[10px] font-bold text-center"
             title="Font Size (px)"
           />
-          <input 
-            disabled={!config[visibilityKey]}
-            type="color" 
-            value={config[colorKey] as string}
-            onChange={(e) => updateConfig(colorKey, e.target.value)}
-            className="w-8 h-8 rounded-lg border-none bg-slate-50 p-1 cursor-pointer"
+          <ColorPicker
+            color={config[colorKey] as string}
+            onChange={(color) => updateConfig(colorKey, color)}
           />
         </div>
         {alignKey && (
@@ -481,11 +480,9 @@ const App: React.FC = () => {
                   </div>
                   {config.showAccent && (
                     <div className="flex gap-2">
-                      <input 
-                        type="color" 
-                        value={config.primaryColor} 
-                        onChange={(e) => updateConfig('primaryColor', e.target.value)} 
-                        className="w-8 h-8 rounded border border-slate-200 cursor-pointer" 
+                      <ColorPicker
+                        color={config.primaryColor}
+                        onChange={(color) => updateConfig('primaryColor', color)}
                       />
                       <input 
                         type="text" 
@@ -593,11 +590,9 @@ const App: React.FC = () => {
                 <div className="space-y-2">
                   <label className="text-[10px] font-bold text-slate-500 uppercase">Default Color</label>
                   <div className="flex items-center gap-2">
-                    <input 
-                      type="color" 
-                      value={pendingCalendarColor}
-                      onChange={(e) => setPendingCalendarColor(e.target.value)}
-                      className="w-10 h-8 rounded border border-slate-200 cursor-pointer"
+                    <ColorPicker
+                      color={pendingCalendarColor}
+                      onChange={setPendingCalendarColor}
                     />
                     <span className="text-[9px] font-mono text-slate-600">{pendingCalendarColor}</span>
                   </div>
@@ -623,12 +618,9 @@ const App: React.FC = () => {
                           }`}
                         />
                       </button>
-                      <input 
-                        type="color" 
-                        value={cal.color}
-                        onChange={(e) => updateCalendarColor(cal.id, e.target.value)}
-                        className="w-8 h-6 rounded border border-slate-200 cursor-pointer flex-shrink-0"
-                        title={`Color for ${cal.name}`}
+                      <ColorPicker
+                        color={cal.color}
+                        onChange={(color) => updateCalendarColor(cal.id, color)}
                       />
                       <span className="text-[9px] font-bold text-slate-700 flex-grow truncate">{cal.name}</span>
                       <button onClick={() => deleteCalendar(cal.id)} className="p-1 hover:bg-red-50 text-slate-300 hover:text-red-500 flex-shrink-0">
