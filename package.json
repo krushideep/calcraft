@@ -1,4 +1,3 @@
-
 {
   "name": "calcraft",
   "private": true,
@@ -10,9 +9,11 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "posthog-js": "^1.218.0",
     "react": "^19.0.0",
+    "react-color": "^2.19.3",
     "react-dom": "^19.0.0",
-    "posthog-js": "^1.218.0"
+    "html2canvas": "^1.4.1"
   },
   "devDependencies": {
     "@types/react": "^19.0.0",

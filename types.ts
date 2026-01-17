@@ -18,35 +18,33 @@ export interface CalendarSource {
 
 export type CalendarFont = 'sans' | 'serif-elegant' | 'serif-classic' | 'mono' | 'modern' | 'poppins' | 'merriweather' | 'roboto' | 'georgia' | 'courier' | 'plex-serif' | 'raleway' | 'garamond';
 export type PageSize = 'A4' | 'A5' | 'custom';
-export type LayoutBlock = 'header' | 'image' | 'grid' | 'quote';
+export type LayoutBlock = 'header' | 'image' | 'grid';
 export type Alignment = 'left' | 'center' | 'right';
 
 export interface MonthConfig {
   month: number; // 0-11
   year: number;
   image?: string;
-  quote?: string;
 }
 
 export interface AppConfig {
   showImages: boolean;
   showEvents: boolean;
-  showQuotes: boolean;
   showTitle: boolean;
   showYear: boolean;
   showGrid: boolean;
   showAccent: boolean;
-  
+
   titleFont: CalendarFont;
   titleSize: number;
   titleColor: string;
   titleAlign: Alignment;
-  
+
   yearFont: CalendarFont;
   yearSize: number;
   yearColor: string;
   yearAlign: Alignment;
-  
+
   gridFont: CalendarFont;
   gridSize: number;
   gridColor: string;
@@ -62,22 +60,17 @@ export interface AppConfig {
   eventFont: CalendarFont;
   eventSize: number;
   eventColor: string;
-  
-  quoteFont: CalendarFont;
-  quoteSize: number;
-  quoteColor: string;
-  quoteAlign: Alignment;
 
   year: number;
   primaryColor: string;
   pageSize: PageSize;
   customWidth: number;
   customHeight: number;
+  dimensionUnit: 'mm' | 'in';
   layoutOrder: LayoutBlock[];
 
   // Block Sizing
   headerHeight: number;
   imageHeight: number;
-  quoteHeight: number;
   gridHeight: number; // 0 means auto/flex-grow
 }
